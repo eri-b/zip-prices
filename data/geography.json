@@ -1,0 +1,30 @@
+{
+  "origins": [
+    {"fips": "36061", "name": "Manhattan", "county": "New York County"},
+    {"fips": "36047", "name": "Brooklyn", "county": "Kings County"},
+    {"fips": "36081", "name": "Queens", "county": "Queens County"},
+    {"fips": "36005", "name": "Bronx", "county": "Bronx County"},
+    {"fips": "36085", "name": "Staten Island", "county": "Richmond County"}
+  ],
+  "destinations": [
+    {"fips": "36119", "name": "Westchester", "state": "NY", "region": "Lower Hudson Valley"},
+    {"fips": "36059", "name": "Nassau", "state": "NY", "region": "Long Island"},
+    {"fips": "36103", "name": "Suffolk", "state": "NY", "region": "Long Island"},
+    {"fips": "36087", "name": "Rockland", "state": "NY", "region": "Lower Hudson Valley"},
+    {"fips": "36079", "name": "Putnam", "state": "NY", "region": "Lower Hudson Valley"},
+    {"fips": "36027", "name": "Dutchess", "state": "NY", "region": "Hudson Valley"},
+    {"fips": "36071", "name": "Orange", "state": "NY", "region": "Hudson Valley"},
+    {"fips": "34003", "name": "Bergen", "state": "NJ", "region": "North Jersey"},
+    {"fips": "34017", "name": "Hudson", "state": "NJ", "region": "North Jersey"},
+    {"fips": "34013", "name": "Essex", "state": "NJ", "region": "North Jersey"},
+    {"fips": "34039", "name": "Union", "state": "NJ", "region": "North Jersey"},
+    {"fips": "34027", "name": "Morris", "state": "NJ", "region": "North Jersey"},
+    {"fips": "34031", "name": "Passaic", "state": "NJ", "region": "North Jersey"},
+    {"fips": "34023", "name": "Middlesex", "state": "NJ", "region": "Central Jersey"},
+    {"fips": "34025", "name": "Monmouth", "state": "NJ", "region": "Central Jersey"},
+    {"fips": "34035", "name": "Somerset", "state": "NJ", "region": "Central Jersey"}
+  ],
+  "unavailable_latest": [
+    {"name": "Fairfield", "state": "CT", "reason": "IRS 2022–2023 county files use Connecticut planning regions rather than Fairfield County."}
+  ]
+}
