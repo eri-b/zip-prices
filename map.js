@@ -1,198 +1,160 @@
 const svg = document.getElementById('metro-map');
 const zctaLayer = document.getElementById('zcta-layer');
-const flowLayer = document.getElementById('flow-layer');
-const labelLayer = document.getElementById('map-labels');
+const waterLayer = document.getElementById('water-layer');
+const townLayer = document.getElementById('town-labels');
 const detailZip = document.getElementById('detail-zip');
 const detailExplainer = document.getElementById('detail-explainer');
 const detailContent = document.getElementById('detail-content');
+const usd = new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0});
 const number = new Intl.NumberFormat('en-US');
-const escapeText = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const app = {geometry:null, zipMap:new Map(), pathMap:new Map(), flows:new Map(), selected:null, fileName:null, period:'', view:{x:0,y:0,w:1400,h:850}, drag:null};
+const app = {geometry:null, data:null, towns:null, water:null, paths:new Map(), zips:new Map(), selected:null, matches:[], view:{x:0,y:0,w:1400,h:850}, drag:null};
+const thresholds = [300000,500000,750000,1000000,1500000,2500000];
+const bedLabel = {'1':'1 bedroom','2':'2 bedrooms','3':'3 bedrooms','4':'4 bedrooms','5':'5+ bedrooms'};
+const $ = id => document.getElementById(id);
 
-function project(lon,lat){
-  const [west,south,east,north]=app.geometry.bounds;
-  return [(lon-west)/(east-west)*app.geometry.width,(north-lat)/(north-south)*app.geometry.height];
-}
 function setView(x,y,w){
-  w=Math.max(110,Math.min(1400,w));
-  const h=w*850/1400;
-  x=Math.max(0,Math.min(1400-w,x));
-  y=Math.max(0,Math.min(850-h,y));
-  app.view={x,y,w,h};
-  svg.setAttribute('viewBox',`${x} ${y} ${w} ${h}`);
+  w=Math.max(110,Math.min(1400,w));const h=w*850/1400;
+  x=Math.max(0,Math.min(1400-w,x));y=Math.max(0,Math.min(850-h,y));
+  app.view={x,y,w,h};svg.setAttribute('viewBox',`${x} ${y} ${w} ${h}`);
+  renderTownLabels();
 }
 function zoom(factor,point){
   const old=app.view, px=point?.[0] ?? old.x+old.w/2, py=point?.[1] ?? old.y+old.h/2;
-  const w=Math.max(110,Math.min(1400,old.w*factor)), h=w*850/1400;
-  const rx=(px-old.x)/old.w, ry=(py-old.y)/old.h;
-  setView(px-rx*w,py-ry*h,w);
+  const w=Math.max(110,Math.min(1400,old.w*factor)),h=w*850/1400;
+  setView(px-(px-old.x)/old.w*w,py-(py-old.y)/old.h*h,w);
 }
 function screenToMap(event){
-  const rect=svg.getBoundingClientRect(), v=app.view;
+  const rect=svg.getBoundingClientRect(),v=app.view;
   return [v.x+(event.clientX-rect.left)/rect.width*v.w,v.y+(event.clientY-rect.top)/rect.height*v.h];
 }
-function inside(lon,lat){
-  const [w,s,e,n]=app.geometry.bounds;
-  return lon>=w&&lon<=e&&lat>=s&&lat<=n;
+function settings(){
+  const min=$('min-price').value===''?0:Number($('min-price').value);
+  const max=$('max-price').value===''?Infinity:Number($('max-price').value);
+  return {bed:$('bedrooms').value,period:$('period').value,min,max};
 }
-function edgeTarget(source,target){
-  const dx=target[0]-source[0],dy=target[1]-source[1],hits=[];
-  for(const x of [22,1378]) if(dx!==0){const t=(x-source[0])/dx,y=source[1]+t*dy;if(t>0&&y>=22&&y<=828)hits.push({t,point:[x,y],side:x<700?'west':'east'});}
-  for(const y of [22,828]) if(dy!==0){const t=(y-source[1])/dy,x=source[0]+t*dx;if(t>0&&x>=22&&x<=1378)hits.push({t,point:[x,y],side:y<425?'north':'south'});}
-  return hits.sort((a,b)=>a.t-b.t)[0]||{point:[Math.max(22,Math.min(1378,target[0])),Math.max(22,Math.min(828,target[1]))],side:'east'};
-}
+function value(zip,bed,period){return app.data?.values?.[zip]?.[bed]?.[period] ?? null;}
+function colorClass(amount){return 'price-'+thresholds.filter(t=>amount>=t).length;}
+function monthLabel(date){return new Date(`${date}T12:00:00`).toLocaleDateString('en-US',{month:'short',year:'numeric'});}
+
 function renderGeometry(){
   zctaLayer.innerHTML=app.geometry.zctas.map(z=>`<path class="zcta" data-zip="${z.zip}" d="${z.path}" fill-rule="evenodd"><title>ZIP area ${z.zip}</title></path>`).join('');
-  for(const z of app.geometry.zctas){app.zipMap.set(z.zip,z);app.pathMap.set(z.zip,zctaLayer.querySelector(`[data-zip="${z.zip}"]`));}
-  const places=[['NEW YORK CITY',-73.95,40.70],['WESTCHESTER',-73.79,41.08],['LONG ISLAND',-72.88,40.86],['NORTH JERSEY',-74.52,40.93],['CONNECTICUT',-73.31,41.32]];
-  labelLayer.innerHTML=places.map(([name,lon,lat])=>{const [x,y]=project(lon,lat);return `<text class="map-label" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle">${name}</text>`}).join('');
-  document.getElementById('map-stat').textContent=`${number.format(app.geometry.zctas.length)} Census ZIP areas shown · drag or zoom to inspect`;
+  for(const z of app.geometry.zctas){app.zips.set(z.zip,z);app.paths.set(z.zip,zctaLayer.querySelector(`[data-zip="${z.zip}"]`));}
+  waterLayer.innerHTML=app.water.paths.map(path=>`<path class="water-shape" d="${path}" fill-rule="evenodd"></path>`).join('');
+}
+function renderTownLabels(){
+  if(!app.geometry||!app.towns)return;
+  const rect=svg.getBoundingClientRect(),view=app.view;
+  if(!rect.width||!rect.height)return;
+  const groups=new Map();
+  for(const z of app.geometry.zctas){
+    const town=app.towns.towns[z.zip];
+    if(!town)continue;
+    const [x,y]=z.center;
+    if(x<view.x||x>view.x+view.w||y<view.y||y>view.y+view.h)continue;
+    const key=town.source+':'+town.id;
+    const item=groups.get(key)||{name:town.name,count:0,x:0,y:0};
+    item.count++;item.x+=x;item.y+=y;
+    groups.set(key,item);
+  }
+  const candidates=[...groups.values()].map(item=>({...item,x:item.x/item.count,y:item.y/item.count}));
+  candidates.sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
+  const maxLabels=view.w>950?15:view.w>450?28:45, boxes=[];
+  const scale=view.w/rect.width;
+  townLayer.replaceChildren();
+  for(const item of candidates){
+    if(boxes.length>=maxLabels)break;
+    const sx=(item.x-view.x)/view.w*rect.width,sy=(item.y-view.y)/view.h*rect.height;
+    const width=Math.min(150,item.name.length*7+16),height=20;
+    const box={left:sx-width/2,right:sx+width/2,top:sy-height/2,bottom:sy+height/2};
+    if(box.left<8||box.right>rect.width-8||box.top<8||box.bottom>rect.height-8)continue;
+    if(boxes.some(other=>box.left<other.right+8&&box.right>other.left-8&&box.top<other.bottom+5&&box.bottom>other.top-5))continue;
+    boxes.push(box);
+    const label=document.createElementNS('http://www.w3.org/2000/svg','text');
+    label.setAttribute('class','town-label');label.setAttribute('x',item.x);label.setAttribute('y',item.y);
+    label.setAttribute('font-size',String(12*scale));label.setAttribute('stroke-width',String(3*scale));
+    label.textContent=item.name;townLayer.append(label);
+  }
+}
+function renderMap(){
+  const {bed,period,min,max}=settings(),matches=[];
+  for(const [zip,path] of app.paths){
+    const amount=value(zip,bed,period),inRange=amount!==null&&amount>=min&&amount<=max;
+    path.setAttribute('class',`zcta ${amount===null?'no-data':colorClass(amount)} ${inRange?'':'filtered'} ${zip===app.selected?'selected':''}`);
+    path.querySelector('title').textContent=`ZIP ${zip}: ${amount===null?`No ${bedLabel[bed]} estimate`:usd.format(amount)}`;
+    if(inRange)matches.push({zip,amount});
+  }
+  matches.sort((a,b)=>a.amount-b.amount||a.zip.localeCompare(b.zip));
+  app.matches=matches;
+  $('match-count').textContent=`${number.format(matches.length)} matching ZIPs`;
+  $('map-stat').textContent=`${number.format(app.geometry.zctas.length)} mapped ZIP areas · ${number.format(matches.length)} match the selected bedroom and price range`;
+  $('result-total').textContent=number.format(matches.length);
+  renderResults();renderDetail();
+}
+function renderResults(){
+  const list=$('result-list');
+  if(!app.matches.length){list.innerHTML='<p class="detail-empty">No ZIPs match these filters. Try a wider price range or another bedroom count.</p>';return;}
+  list.innerHTML=app.matches.slice(0,100).map(({zip,amount})=>`<button type="button" class="result-row" data-zip="${zip}"><span>${zip}</span><strong>${usd.format(amount)}</strong></button>`).join('')+
+    (app.matches.length>100?`<p class="result-note">Showing the 100 lowest-priced matches of ${number.format(app.matches.length)}. Narrow the price range to see more.</p>`:'');
+}
+function renderDetail(){
+  const zip=app.selected, {bed,period,min,max}=settings();
+  if(!zip){detailZip.textContent='Choose a ZIP';detailExplainer.textContent='Hover over the map or search for a ZIP to compare home values.';detailContent.innerHTML='';return;}
+  if(!app.zips.has(zip)){detailZip.textContent=zip;detailExplainer.textContent='This ZIP has no mapped Census ZCTA in the displayed metro area.';detailContent.innerHTML='';return;}
+  const amount=value(zip,bed,period),date=app.data.end_dates[bed];
+  detailZip.textContent=zip;
+  detailExplainer.textContent=`${period==='1'?'12':period==='2'?'24':'36'}-month average through ${monthLabel(date)} · ${bedLabel[bed]}`;
+  const town=app.towns?.towns?.[zip]?.name;
+  let html=town?`<p class="town-meta">Town/area: <strong>${town.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</strong></p>`:'';
+  html+=`<div class="detail-summary"><span>AVERAGE TYPICAL VALUE</span><strong>${amount===null?'No estimate':usd.format(amount)}</strong></div>`;
+  if(amount===null)html+=`<p class="detail-note">No ${bedLabel[bed]} estimate is published for this ZIP. Other bedroom counts are shown below when available.</p>`;
+  if(amount!==null&&(amount<min||amount>max))html+='<p class="outside-note">This ZIP is outside the selected price range.</p>';
+  html+='<div class="detail-subhead">ALL BEDROOM COUNTS</div>';
+  for(const count of ['1','2','3','4','5']){
+    const v=value(zip,count,period);
+    html+=`<div class="bed-row ${count===bed?'active':''}"><span>${bedLabel[count]}</span><strong>${v===null?'—':usd.format(v)}</strong></div>`;
+  }
+  html+='<p class="detail-note">Bedroom categories are separate Zillow estimates. Values are based on the housing stock, not just sold homes.</p>';
+  detailContent.innerHTML=html;
 }
 function selectZip(zip,persist=false){
-  if(!app.zipMap.has(zip)){
-    detailZip.textContent='ZIP not mapped';detailExplainer.textContent=`${zip} has no Census ZCTA area in the displayed NYC metro extent.`;detailContent.innerHTML='';return;
-  }
-  app.selected=zip;
-  const routes=(app.flows.get(zip)||[]).slice().sort((a,b)=>b.count-a.count);
-  const drawing=routes.slice(0,8);
-  const targets=new Set(drawing.map(r=>r.destination));
-  for(const [code,path] of app.pathMap){
-    path.classList.toggle('selected',code===zip);
-    path.classList.toggle('destination',code!==zip&&targets.has(code));
-  }
-  detailZip.textContent=zip;
-  if(!app.fileName){
-    detailExplainer.textContent='ZIP boundaries are ready; move counts need a ZIP-to-ZIP source file.';
-    detailContent.innerHTML='<div class="detail-empty">Load a USPS Population Mobility Trends CSV above. The file is read locally in this browser session; no routes are estimated.</div>';
-    flowLayer.innerHTML='';
-  } else if(!routes.length){
-    detailExplainer.textContent='No published route for this ZIP in the loaded file.';
-    detailContent.innerHTML='<div class="detail-empty">This does not mean no one moved. The ZIP may be absent from the file or below its publication threshold.</div>';
-    flowLayer.innerHTML='';
-  } else {
-    const total=routes.reduce((n,r)=>n+r.count,0);
-    detailExplainer.textContent=`Published change-of-address requests from ${zip}, ${app.period}. Routes below USPS thresholds may be absent.`;
-    detailContent.innerHTML=`<div class="detail-summary"><span>SHOWN ROUTE TOTAL</span><strong>${number.format(total)}</strong></div><div class="detail-subhead">DESTINATION ZIPs · ${routes.length} PUBLISHED ROUTES</div>`+
-      routes.slice(0,30).map((r,i)=>`<div class="route"><span class="route-index">${String(i+1).padStart(2,'0')}</span><span><b>${escapeText(r.destination)}</b> · ${escapeText(r.city)}, ${escapeText(r.state)}<small>${r.local?'Within map':'Beyond map edge'}</small></span><strong>${number.format(r.count)}</strong></div>`).join('')+
-      (routes.length>30?`<p style="font-size:11px;color:#6a7c78">Showing 30 of ${routes.length} routes.</p>`:'');
-    renderFlows(zip,drawing);
-  }
-  if(persist){const q=new URLSearchParams(location.search);q.set('zip',zip);history.replaceState(null,'',location.pathname+'?'+q);}
+  if(zip===app.selected&&!persist)return;
+  const previous=app.selected;app.selected=zip;
+  if(previous&&app.paths.has(previous))app.paths.get(previous).classList.remove('selected');
+  if(app.paths.has(zip))app.paths.get(zip).classList.add('selected');
+  renderDetail();
+  if(persist){const q=new URLSearchParams(location.search);q.set('zip',zip);history.replaceState(null,'',`${location.pathname}?${q}`);}
 }
-function renderFlows(origin,routes){
-  const source=app.zipMap.get(origin).center;
-  const paths=[],labels=[],usedOutside={west:0,east:0,north:0,south:0};
-  routes.forEach((r,i)=>{
-    let target, outside=false,side='';
-    const mapped=app.zipMap.get(r.destination);
-    if(mapped)target=mapped.center;
-    else if(Number.isFinite(r.lon)&&Number.isFinite(r.lat)){
-      const actual=project(r.lon,r.lat);
-      if(inside(r.lon,r.lat))target=actual;
-      else{const edge=edgeTarget(source,actual);target=edge.point;side=edge.side;outside=true;}
-    }
-    if(!target)return;
-    const dx=target[0]-source[0],dy=target[1]-source[1],length=Math.hypot(dx,dy);
-    if(length<1){
-      const x=source[0],y=source[1];
-      paths.push(`<path class="flow-line" d="M${x},${y} C${x+34},${y-54} ${x-34},${y-54} ${x-8},${y-5}"><title>${escapeText(origin)} → same ZIP: ${number.format(r.count)} change-of-address requests</title></path>`);
-      labels.push(`<text class="flow-label" x="${x}" y="${y-49}" text-anchor="middle">same ZIP · ${number.format(r.count)}</text>`);
-      return;
-    }
-    const adjust=outside?0:Math.min(17,length*.13)*(i%2?-1:1);
-    const cx=(source[0]+target[0])/2-dy/length*adjust,cy=(source[1]+target[1])/2+dx/length*adjust;
-    paths.push(`<path class="flow-line ${outside?'outside':''}" d="M${source[0]},${source[1]} Q${cx.toFixed(1)},${cy.toFixed(1)} ${target[0].toFixed(1)},${target[1].toFixed(1)}"><title>${escapeText(origin)} → ${escapeText(r.destination)}: ${number.format(r.count)} change-of-address requests</title></path>`);
-    let lx=target[0],ly=target[1]-13,anchor='middle';
-    if(outside){const n=usedOutside[side]++;if(side==='west'){lx=target[0]+14;ly=target[1]+(n%3-1)*22;anchor='start'}else if(side==='east'){lx=target[0]-14;ly=target[1]+(n%3-1)*22;anchor='end'}else{lx=target[0]+(n%3-1)*55;ly=side==='north'?target[1]+22:target[1]-18;}}
-    const caption=outside?`${r.destination} ${r.city}, ${r.state} · ${number.format(r.count)}`:`${r.destination} · ${number.format(r.count)}`;
-    labels.push(`<text class="flow-label" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${escapeText(caption)}</text>`);
-  });
-  flowLayer.innerHTML=paths.join('')+labels.join('');
-}
-function csvRows(text,callback){
-  let field='',row=[],quoted=false,started=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i];
-    if(c==='"'){if(quoted&&text[i+1]==='"'){field+='"';i++;}else quoted=!quoted;}
-    else if(c===','&&!quoted){row.push(field);field='';}
-    else if((c==='\n'||c==='\r')&&!quoted){
-      if(c==='\r'&&text[i+1]==='\n')i++;
-      row.push(field);field='';
-      if(row.some(x=>x!=='')){if(!started&&row[0].trim()==='Date'){started=true;callback(row);}else if(started)callback(row);}
-      row=[];
-    }else field+=c;
-  }
-  if(field||row.length){row.push(field);if(started)callback(row);}
-  if(!started)throw Error('No USPS header row beginning with Date was found.');
-}
-function parsePmt(text){
-  let columns=null, accepted=0;const groups=new Map(),months=new Set();
-  csvRows(text,row=>{
-    if(!columns){columns=new Map(row.map((name,index)=>[name.trim(),index]));for(const key of ['O Zip','N Zip','Tot Vol'])if(!columns.has(key))throw Error(`Missing USPS column: ${key}`);return;}
-    const get=name=>row[columns.get(name)]?.trim()||'';
-    const origin=get('O Zip').padStart(5,'0'),destination=get('N Zip').padStart(5,'0'),count=Number(get('Tot Vol'));
-    if(!/^\d{5}$/.test(origin)||!/^\d{5}$/.test(destination)||!Number.isInteger(count)||count<=0||!app.zipMap.has(origin))return;
-    const key=origin+'|'+destination;
-    const state=get('N St'),city=get('N Cty');
-    const rawLon=get('NEWLON'),rawLat=get('NEWLAT');
-    const lon=rawLon?Number(rawLon):NaN,lat=rawLat?Number(rawLat):NaN;
-    const route=groups.get(key)||{origin,destination,city,state,count:0,lon:Number.isFinite(lon)?lon:null,lat:Number.isFinite(lat)?lat:null};
-    route.count+=count;groups.set(key,route);accepted++;
-    if(get('Date'))months.add(get('Date'));
-  });
-  const flows=new Map();
-  for(const route of groups.values()){
-    route.local=app.zipMap.has(route.destination)||(route.lon!==null&&route.lat!==null&&inside(route.lon,route.lat));
-    if(!flows.has(route.origin))flows.set(route.origin,[]);
-    flows.get(route.origin).push(route);
-  }
-  const dates=[...months].sort();
-  return {flows,accepted,months:months.size,period:dates.length?(dates[0]===dates[dates.length-1]?dates[0]:`${dates[0]}–${dates[dates.length-1]}`):'undated file'};
-}
-function parsePreparedJson(text){
-  const data=JSON.parse(text);
-  if(data.format!=='nyc-metro-pmt-v1'||!Array.isArray(data.routes))throw Error('Unsupported prepared flow JSON format.');
-  const flows=new Map();
-  for(const r of data.routes){
-    if(!/^\d{5}$/.test(r.origin)||!/^\d{5}$/.test(r.destination)||!Number.isInteger(r.count)||r.count<=0||!app.zipMap.has(r.origin))continue;
-    r.local=app.zipMap.has(r.destination)||(Number.isFinite(r.lon)&&Number.isFinite(r.lat)&&inside(r.lon,r.lat));
-    if(!flows.has(r.origin))flows.set(r.origin,[]);
-    flows.get(r.origin).push(r);
-  }
-  return {flows,accepted:data.source_rows||data.routes.length,period:data.period||'undated file'};
-}
-async function loadFile(file){
-  const state=document.getElementById('data-state'),message=document.getElementById('data-message');
-  state.textContent='Reading ZIP flows…';message.textContent=file.name;
-  try{
-    const text=await file.text();const result=file.name.toLowerCase().endsWith('.json')?parsePreparedJson(text):parsePmt(text);
-    if(!result.accepted)throw Error('No routes with NYC metro origin ZCTAs were found. The public USPS sample contains no NYC rows.');
-    app.flows=result.flows;app.fileName=file.name;app.period=result.period;
-    document.getElementById('data-banner').classList.add('loaded');
-    state.textContent=`${number.format(result.flows.size)} origin ZIPs loaded`;
-    message.textContent=`${result.period} · ${number.format(result.accepted)} source rows · local browser session`;
-    for(const [zip,path] of app.pathMap)path.classList.toggle('has-data',app.flows.has(zip));
-    document.getElementById('map-stat').textContent=`${number.format(app.geometry.zctas.length)} ZIP areas · ${number.format(app.flows.size)} origins with published routes`;
-    const first=app.selected&&app.flows.has(app.selected)?app.selected:[...app.flows.entries()].sort((a,b)=>b[1].reduce((n,r)=>n+r.count,0)-a[1].reduce((n,r)=>n+r.count,0))[0][0];
-    selectZip(first,true);
-  }catch(error){state.textContent='Could not load ZIP flows';message.textContent=error.message;}
+function search(){
+  const zip=$('zip-search').value.trim();
+  if(!/^\d{5}$/.test(zip)){detailExplainer.textContent='Enter a five-digit ZIP code.';return;}
+  selectZip(zip,true);
+  if(app.zips.has(zip)){const [x,y]=app.zips.get(zip).center;setView(x-190,y-115,380);}
 }
 function wireEvents(){
+  for(const id of ['bedrooms','period'])$(id).addEventListener('change',renderMap);
+  for(const id of ['min-price','max-price'])$(id).addEventListener('input',renderMap);
+  $('clear-filters').addEventListener('click',()=>{$('min-price').value='';$('max-price').value='';renderMap();});
+  $('search-button').addEventListener('click',search);
+  $('zip-search').addEventListener('keydown',event=>{if(event.key==='Enter')search();});
+  $('result-list').addEventListener('click',event=>{const button=event.target.closest('button[data-zip]');if(button){selectZip(button.dataset.zip,true);const [x,y]=app.zips.get(button.dataset.zip).center;setView(x-190,y-115,380);}});
   zctaLayer.addEventListener('pointerover',event=>{const path=event.target.closest?.('.zcta');if(path&&!app.drag?.moved)selectZip(path.dataset.zip);});
   zctaLayer.addEventListener('click',event=>{const path=event.target.closest?.('.zcta');if(path&&!app.drag?.moved)selectZip(path.dataset.zip,true);});
-  document.getElementById('file-input').addEventListener('change',event=>{const file=event.target.files?.[0];if(file)loadFile(file);});
-  function search(){const zip=document.getElementById('zip-search').value.trim();if(!/^\d{5}$/.test(zip)){detailExplainer.textContent='Enter a five-digit ZIP code.';return;}selectZip(zip,true);if(app.zipMap.has(zip)){const [x,y]=app.zipMap.get(zip).center;setView(x-190,y-115,380);}}
-  document.getElementById('search-button').addEventListener('click',search);
-  document.getElementById('zip-search').addEventListener('keydown',event=>{if(event.key==='Enter')search();});
-  document.getElementById('zoom-in').addEventListener('click',()=>zoom(.7));
-  document.getElementById('zoom-out').addEventListener('click',()=>zoom(1/.7));
-  document.getElementById('reset-view').addEventListener('click',()=>setView(0,0,1400));
+  $('zoom-in').addEventListener('click',()=>zoom(.7));$('zoom-out').addEventListener('click',()=>zoom(1/.7));$('reset-view').addEventListener('click',()=>setView(0,0,1400));
   svg.addEventListener('wheel',event=>{event.preventDefault();zoom(event.deltaY>0?1.22:.82,screenToMap(event));},{passive:false});
   svg.addEventListener('pointerdown',event=>{if(event.button!==0)return;app.drag={start:[event.clientX,event.clientY],view:{...app.view},moved:false};svg.setPointerCapture(event.pointerId);});
   svg.addEventListener('pointermove',event=>{if(!app.drag)return;const dx=event.clientX-app.drag.start[0],dy=event.clientY-app.drag.start[1];if(Math.abs(dx)+Math.abs(dy)>4)app.drag.moved=true;if(!app.drag.moved)return;svg.classList.add('dragging');const rect=svg.getBoundingClientRect();setView(app.drag.view.x-dx/rect.width*app.drag.view.w,app.drag.view.y-dy/rect.height*app.drag.view.h,app.drag.view.w);});
   svg.addEventListener('pointerup',()=>{svg.classList.remove('dragging');setTimeout(()=>app.drag=null,0);});
+  window.addEventListener('resize',renderTownLabels);
 }
-fetch('data/processed/metro_zctas.json').then(response=>{if(!response.ok)throw Error('ZIP boundary data unavailable');return response.json();}).then(geo=>{
-  app.geometry=geo;renderGeometry();wireEvents();
+try{
+  const geometry=window.METRO_ZCTAS,data=window.METRO_HOME_VALUES,towns=window.METRO_TOWNS,water=window.METRO_WATER;
+  if(!geometry?.zctas?.length)throw Error('ZIP boundary data unavailable');
+  if(data?.format!=='metro-zhvi-v1'||!Object.keys(data.values||{}).length)throw Error('Home value data unavailable');
+  if(towns?.format!=='metro-towns-v1')throw Error('Town label data unavailable');
+  if(water?.format!=='metro-water-v1'||!water.paths?.length)throw Error('Water map data unavailable');
+  app.geometry=geometry;app.data=data;app.towns=towns;app.water=water;renderGeometry();wireEvents();
+  $('data-banner').classList.add('loaded');$('data-state').textContent='Bedroom-specific ZIP values loaded';
+  $('data-message').textContent=`Through ${monthLabel(data.end_dates['3'])} · Data provided by Zillow Group`;
   const zip=new URLSearchParams(location.search).get('zip');if(zip)selectZip(zip);
-}).catch(error=>{document.getElementById('map-stat').textContent=error.message;detailExplainer.textContent='Run the boundary build script and serve this project from a local web server.';});
+  renderMap();renderTownLabels();
+}catch(error){$('data-state').textContent='Could not load data';$('data-message').textContent=error.message;$('map-stat').textContent=error.message;detailExplainer.textContent='Check that the generated data scripts are beside the page.';}

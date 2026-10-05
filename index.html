@@ -4,58 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f5f1">
-  <title>NYC Metro ZIP Flow Atlas</title>
-  <link rel="stylesheet" href="map.css">
+  <title>NYC Metro Home Values by ZIP</title>
+  <link rel="stylesheet" href="map.css?v=20261005-7">
 </head>
 <body>
-  <header class="masthead">
-    <div class="wrap masthead-inner"><a href="index.html" class="logo">NYC <b>ZIP</b> FLOW ATLAS<span class="logo-dot">●</span></a><nav><a href="#method">About the data</a><a href="county.html">County explorer ↗</a></nav></div>
-  </header>
+  <header class="masthead"><div class="wrap masthead-inner"><a href="index.html" class="logo">NYC METRO <b>HOME VALUES</b><span class="logo-dot">●</span></a><nav><a href="#method">About the data</a><a href="county.html">Migration archive ↗</a></nav></div></header>
   <main>
-    <section class="intro wrap">
-      <p class="kicker">A MAP OF MOVES · NEW YORK METRO</p>
-      <div class="intro-line"><h1>Where does your<br><em>ZIP code go?</em></h1><p>Hover over a ZIP area to trace its published destination routes. The map stays anchored to the NYC metro; moves farther away end at the edge with their destinations labeled.</p></div>
-    </section>
-
-    <section class="data-banner wrap" id="data-banner" aria-live="polite">
-      <div><span class="banner-dot"></span><strong id="data-state">ZIP-to-ZIP counts needed</strong><span id="data-message">The map is ready. Load a USPS Population Mobility Trends CSV to see actual moves.</span></div>
-      <label class="load-button" for="file-input">Load local flow data <span>↗</span></label>
-      <input id="file-input" type="file" accept=".csv,.CSV,.json,text/csv,application/json">
-    </section>
-
-    <section class="atlas wrap" aria-label="NYC metro ZIP flow map">
-      <div class="atlas-toolbar">
-        <div class="toolbar-title"><span class="live-indicator"></span> ZIP AREAS &amp; ROUTES <small>2020 CENSUS ZCTA BOUNDARIES</small></div>
-        <div class="toolbar-actions"><label class="search-box"><span class="sr-only">Find ZIP</span><input id="zip-search" inputmode="numeric" maxlength="5" placeholder="Find a ZIP" aria-label="Find a ZIP"><button id="search-button" type="button" aria-label="Search ZIP">⌕</button></label><button type="button" id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="reset-view" class="reset-button">Full metro</button></div>
+    <section class="data-banner wrap" id="data-banner" aria-live="polite"><span class="banner-dot"></span><strong id="data-state">Loading home values…</strong><span id="data-message">Source: Zillow Research ZIP Home Value Index</span></section>
+    <section class="atlas wrap" aria-label="NYC metro home values by ZIP">
+      <div class="filter-panel">
+        <div class="filter-group"><label for="bedrooms">Bedrooms</label><select id="bedrooms"><option value="1">1 bedroom</option><option value="2">2 bedrooms</option><option value="3" selected>3 bedrooms</option><option value="4">4 bedrooms</option><option value="5">5+ bedrooms</option></select></div>
+        <div class="filter-group"><label for="period">Average over</label><select id="period"><option value="1" selected>Past 12 months</option><option value="2">Past 24 months</option><option value="3">Past 36 months</option></select></div>
+        <div class="filter-group price-field"><label for="min-price">Min price</label><div class="money-input"><span>$</span><input id="min-price" type="number" inputmode="numeric" min="0" step="50000" placeholder="Any"></div></div>
+        <div class="filter-group price-field"><label for="max-price">Max price</label><div class="money-input"><span>$</span><input id="max-price" type="number" inputmode="numeric" min="0" step="50000" placeholder="Any"></div></div>
+        <button id="clear-filters" type="button">Clear price</button><strong id="match-count" aria-live="polite">Loading…</strong>
       </div>
-      <div class="atlas-body">
-        <div class="map-frame">
-          <svg id="metro-map" viewBox="0 0 1400 850" role="img" aria-label="Census ZIP Code Tabulation Areas in the New York metropolitan area">
-            <defs><marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 Z" fill="#db7048"/></marker></defs>
-            <rect x="0" y="0" width="1400" height="850" class="map-water"/>
-            <g id="zcta-layer"></g>
-            <g id="map-labels"></g>
-            <g id="flow-layer"></g>
-          </svg>
-          <div class="map-legend"><span class="legend-square"></span> ZIP area approximation <span class="legend-arrow">⟶</span> Published change-of-address route</div>
-          <div class="map-hint">Hover to explore · drag to pan · scroll to zoom</div>
-        </div>
-        <aside class="detail" id="detail" aria-live="polite">
-          <p class="detail-kicker">ORIGIN ZIP</p>
-          <h2 id="detail-zip">Select a ZIP</h2>
-          <p id="detail-explainer">Point to an area on the map, or search for a ZIP code, to explore its destination routes.</p>
-          <div id="detail-content"></div>
-        </aside>
-      </div>
-      <div class="atlas-foot"><span id="map-stat">Loading ZIP boundaries…</span><span>Outside-metro routes stop at the frame; the map never zooms out to them.</span></div>
+      <div class="atlas-toolbar"><div class="toolbar-title"><span class="live-indicator"></span> HOME VALUE MAP <small>2020 CENSUS ZIP AREAS</small></div><div class="toolbar-actions"><label class="search-box"><span class="sr-only">Find ZIP</span><input id="zip-search" inputmode="numeric" maxlength="5" placeholder="Find a ZIP" aria-label="Find a ZIP"><button id="search-button" type="button" aria-label="Search ZIP">⌕</button></label><button type="button" id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button><button type="button" id="reset-view" class="reset-button">Full metro</button></div></div>
+      <div class="atlas-body"><div class="map-frame"><svg id="metro-map" viewBox="0 0 1400 850" role="img" aria-label="Map of typical home values by ZIP in the New York metropolitan area"><rect x="0" y="0" width="1400" height="850" class="map-land"/><g id="zcta-layer"></g><g id="water-layer"></g><g id="town-labels"></g></svg><div class="map-legend"><span>Typical value</span><div class="legend-gradient"></div><div class="legend-ends"><span>Under $300k</span><span>$2.5m+</span></div><small><i class="water-key"></i> Water <i class="no-data-key"></i> No data</small><small>Faded: outside price filter</small></div><div class="map-hint">Hover to inspect · drag to pan · scroll to zoom</div></div><aside class="detail" id="detail" aria-live="polite"><p class="detail-kicker">SELECTED ZIP</p><h2 id="detail-zip">Choose a ZIP</h2><p id="detail-explainer">Hover over the map or search for a ZIP to compare home values.</p><div id="detail-content"></div><div class="results"><div class="detail-subhead">MATCHING ZIPs <span id="result-total"></span></div><div id="result-list"></div></div></aside></div>
+      <div class="atlas-foot"><span id="map-stat">Loading ZIP boundaries and prices…</span><span>Values are estimates for all homes, not averages of closed sales.</span></div>
     </section>
-
-    <section id="method" class="method wrap">
-      <div><p class="kicker">READING THIS MAP</p><h2>A ZIP code is not a neat polygon.</h2></div>
-      <div class="method-copy"><p>Outlined areas are 2020 Census ZIP Code Tabulation Areas (ZCTAs): public approximations of USPS ZIP geography. Some USPS ZIPs have no matching ZCTA and therefore cannot be hovered as an area.</p><p>When supplied, route counts come from USPS Population Mobility Trends and represent change-of-address requests. The product publishes only leading routes above its thresholds. Shown routes are therefore <strong>not a complete count of moves</strong>, and they are separate from IRS tax-return migration data.</p><p>The local CSV stays in your browser during this session. Check your USPS license before publishing derived counts. <a href="ZIP_DATA_NOTES.md">Data sources and import details ↗</a></p></div>
-    </section>
+    <section id="method" class="method wrap"><div class="method-copy"><p><strong>These are not recorded sale prices.</strong> Free public sale records do not consistently include bedrooms across the NYC metro. The map uses Zillow’s bedroom-specific ZIP Home Value Index (ZHVI), an estimate of the typical value of homes, including homes that did not sell.</p><p>Each displayed figure averages the available monthly ZHVI values over the selected 12, 24, or 36 months. ZIPs with fewer than 75% of months reported are left blank. Zillow reports 4-bedroom and 5+ bedroom homes separately; combining them would require unpublished counts.</p><p>Outlines are <a href="https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html">2020 Census ZCTAs</a>, approximations of postal ZIPs. Source: <a href="https://www.zillow.com/research/data/">Zillow Research housing data</a>. Data provided by Zillow Group. <a href="HOME_VALUE_DATA_NOTES.md">Processing details ↗</a></p></div></section>
   </main>
-  <footer class="wrap footer"><span>NYC ZIP FLOW ATLAS</span><span>Boundaries: U.S. Census Bureau · Flows: user-supplied USPS data</span></footer>
-  <script src="map.js" defer></script>
+  <footer class="wrap footer"><span>NYC METRO HOME VALUES</span><span>Data provided by Zillow Group · Geography: U.S. Census Bureau</span></footer>
+  <script src="data/processed/metro_zctas.js" defer></script>
+  <script src="data/processed/metro_home_values.js" defer></script>
+  <script src="data/processed/metro_towns.js" defer></script>
+  <script src="data/processed/metro_water.js" defer></script>
+  <script src="map.js?v=20261005-7" defer></script>
 </body>
 </html>

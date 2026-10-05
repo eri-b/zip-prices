@@ -54,7 +54,9 @@ def main():
             cx, cy = project((x0+x1)/2, (y0+y1)/2)
             zctas.append({"zip": item.record["ZCTA5CE20"], "path": path, "center": [round(cx, 1), round(cy, 1)]})
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps({"source": URL, "bounds": BOUNDS, "width": WIDTH, "height": HEIGHT, "zctas": zctas}, separators=(",", ":")))
+    payload = json.dumps({"source": URL, "bounds": BOUNDS, "width": WIDTH, "height": HEIGHT, "zctas": zctas}, separators=(",", ":"))
+    OUT.write_text(payload)
+    OUT.with_suffix(".js").write_text("window.METRO_ZCTAS=" + payload + ";\n")
     print(f"Wrote {len(zctas)} ZCTA display polygons to {OUT} ({OUT.stat().st_size:,} bytes)")
 
 
