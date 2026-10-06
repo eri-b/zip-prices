@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 GEOMETRY = ROOT / "data/processed/metro_zctas.json"
 OUTPUT = ROOT / "data/processed/metro_home_values.json"
 URL = "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_{beds}_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
+ALL_HOMES_URL = "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
 
 
 def main():
@@ -21,14 +22,14 @@ def main():
     metro_zips = {row["zip"] for row in geometry["zctas"]}
     values = {}
     end_dates = {}
-    for beds in (1, 2, 3, 4, 5):
-        source = URL.format(beds=beds)
-        print(f"Downloading {beds} bedroom series…", flush=True)
+    series = [("all", ALL_HOMES_URL)] + [(str(beds), URL.format(beds=beds)) for beds in (1, 2, 3, 4, 5)]
+    for group, source in series:
+        print(f"Downloading {group} homes series…", flush=True)
         with urlopen(source, timeout=180) as response:
             rows = csv.DictReader((line.decode("utf-8-sig") for line in response))
             dates = [key for key in rows.fieldnames if len(key) == 10 and key[4] == "-" and key[7] == "-"]
             latest = max(dates)
-            end_dates[str(beds)] = latest
+            end_dates[group] = latest
             windows = {str(years): sorted(dates)[-years * 12:] for years in (1, 2, 3)}
             count = 0
             for row in rows:
@@ -40,17 +41,16 @@ def main():
                 periods = {}
                 for years, months in windows.items():
                     observed = [float(row[key]) for key in months if row.get(key)]
-                    # Require at least 75% of months so a short run is not
-                    # presented as a full one-, two-, or three-year average.
-                    if len(observed) >= int(len(months) * .75):
+                    # Require at least half the months in the selected window.
+                    if len(observed) >= len(months) // 2:
                         periods[years] = round(sum(observed) / len(observed))
                 if periods:
-                    values.setdefault(zipcode, {})[str(beds)] = periods
+                    values.setdefault(zipcode, {})[group] = periods
                     count += 1
             print(f"  {count} metro ZIPs, latest month {latest}", flush=True)
     payload = {
         "format": "metro-zhvi-v1",
-        "source": "Zillow Research ZIP ZHVI, bedroom-specific, seasonally adjusted",
+        "source": "Zillow Research ZIP ZHVI, all homes and bedroom-specific, seasonally adjusted",
         "source_url": "https://www.zillow.com/research/data/",
         "metric": "Mean of monthly typical home values, not sale prices",
         "end_dates": end_dates,

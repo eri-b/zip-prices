@@ -43,11 +43,19 @@
 @media(max-width:650px){.data-banner{margin-top:14px}.filter-panel{padding:14px;gap:10px}.filter-group{width:calc(50% - 5px)}.filter-group select,.money-input{width:100%;min-width:0}.money-input input{width:100%}#clear-filters{width:100%}.map-legend{width:180px}.data-banner>span:last-child{display:block;margin:8px 0 0 20px}}
 
 /* Keep the map viewport independent of the changing ZIP detail content. */
-.atlas-body{height:640px;min-height:0;grid-template-rows:minmax(0,1fr)}
+.atlas-body{height:800px;min-height:0;grid-template-rows:minmax(0,1fr)}
 .map-frame,#metro-map,.detail{height:100%;min-height:0}
-@media(max-width:1000px){.atlas-body{height:auto;grid-template-rows:500px auto}.map-frame,#metro-map{height:500px;min-height:0}.detail{height:auto;max-height:500px;min-height:0;overflow:auto}}
+@media(max-width:1000px){.atlas-body{height:auto;grid-template-rows:680px auto}.map-frame,#metro-map{height:680px;min-height:0}.detail{height:auto;max-height:500px;min-height:0;overflow:auto}}
 @media(max-width:650px){.atlas-body{grid-template-rows:410px auto}.map-frame,#metro-map{height:410px;min-height:0}}
 
 .method{display:block}
 .method-copy{max-width:780px}
 @media(max-width:650px){.method-copy{margin-top:0}}
+
+.footer a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.footer a:hover{color:var(--teal)}
+
+.masthead{border-top:0}
+.logo{color:var(--ink);font-family:'Libre Baskerville',Georgia,serif;font-size:18px;font-weight:400;letter-spacing:-.035em}
+.masthead nav a{color:var(--ink)}
+@media(max-width:650px){.logo{font-size:14px}}

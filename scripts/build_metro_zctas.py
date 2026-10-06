@@ -14,8 +14,8 @@ import shapefile
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data/processed/metro_zctas.json"
 URL = "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip"
-BOUNDS = [-75.1, 40.2, -71.8, 41.8]  # Entire local display; arrows beyond it stop at its edge.
-WIDTH, HEIGHT = 1400, 850
+BOUNDS = [-75.1, 40.2, -71.8, 42.3]  # North edge includes all of Ulster and Dutchess.
+WIDTH, HEIGHT = 1400, 1100
 
 
 def project(lon, lat):
@@ -49,10 +49,11 @@ def main():
             x0, y0, x1, y1 = shape.bbox
             if x0 > BOUNDS[2] or x1 < BOUNDS[0] or y0 > BOUNDS[3] or y1 < BOUNDS[1]:
                 continue
+            zipcode = item.record["ZCTA5CE20"]
             starts = list(shape.parts) + [len(shape.points)]
             path = "".join(ring_path(shape.points[starts[i]:starts[i+1]]) for i in range(len(starts)-1))
             cx, cy = project((x0+x1)/2, (y0+y1)/2)
-            zctas.append({"zip": item.record["ZCTA5CE20"], "path": path, "center": [round(cx, 1), round(cy, 1)]})
+            zctas.append({"zip": zipcode, "path": path, "center": [round(cx, 1), round(cy, 1)]})
     OUT.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps({"source": URL, "bounds": BOUNDS, "width": WIDTH, "height": HEIGHT, "zctas": zctas}, separators=(",", ":"))
     OUT.write_text(payload)
