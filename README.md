@@ -18,7 +18,7 @@ Rebuild ZIP boundaries with `python3 scripts/build_metro_zctas.py` (requires `py
 
 ## Deploy to Cloudflare Workers
 
-The site is configured as a Workers Static Assets project named `third-bedroom` in `wrangler.jsonc`. The build publishes only the site files and browser data to `dist/`; it leaves raw source data and build scripts out of the deployed site.
+The site is configured as a Workers Static Assets project named `zip-prices` in `wrangler.jsonc`. The build publishes only the site files and browser data to `dist/`; it leaves raw source data and build scripts out of the deployed site.
 
 For a connected Git repository, set the following in the Worker's **Settings → Build**:
 
@@ -26,6 +26,6 @@ For a connected Git repository, set the following in the Worker's **Settings →
 - Deploy command: `npx wrangler deploy`
 - Production branch: `main`
 
-Wrangler's `build.command` also runs the site build for local `npx wrangler deploy`. Cloudflare Workers Builds does not use that setting, so its dashboard Build command is required. Run `sh scripts/build_cloudflare.sh` locally to inspect the deployment files. If the existing Cloudflare Worker has another name, update `wrangler.jsonc` to match it.
+Wrangler's `build.command` also runs the site build for local `npx wrangler deploy`. Cloudflare Workers Builds does not use that setting, so its dashboard Build command is required. Run `sh scripts/build_cloudflare.sh` locally to inspect the deployment files.
 
 <!-- Temporary deployment trigger: 2026-10-07 -->
