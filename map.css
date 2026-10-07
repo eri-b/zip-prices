@@ -58,4 +58,10 @@
 .masthead{border-top:0}
 .logo{color:var(--ink);font-family:'Libre Baskerville',Georgia,serif;font-size:18px;font-weight:400;letter-spacing:-.035em}
 .masthead nav a{color:var(--ink)}
-@media(max-width:650px){.logo{font-size:14px}}
+.masthead-inner{display:flex;justify-content:space-between;gap:24px}
+.logo{display:flex;flex-direction:column;align-items:flex-start;gap:4px;white-space:nowrap}
+.logo-subtitle{font-family:'DM Sans',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--muted)}
+.footer{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:20px}
+.footer-tagline{text-align:center}
+.footer>span:last-child{text-align:right}
+@media(max-width:650px){.masthead-inner{height:auto;min-height:64px;flex-wrap:wrap;gap:12px;padding-top:14px;padding-bottom:14px}.logo{font-size:16px}.logo-subtitle{font-size:9px}.footer{grid-template-columns:1fr;gap:7px}.footer-tagline{text-align:left}.footer>span:last-child{text-align:left}.footer span{margin-top:0}}

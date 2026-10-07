@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f5f1">
-  <title>NYC Metro Home Values by ZIP</title>
-  <link rel="stylesheet" href="map.css?v=20261006-4">
+  <title>Third Bedroom &mdash; NYC Metro Home Values</title>
+  <link rel="stylesheet" href="map.css?v=20261006-6">
 </head>
 <body>
-  <header class="masthead"><div class="wrap masthead-inner"><a href="index.html" class="logo">NYC Metro Home Values</a><nav><a href="#method">About the data</a><a href="county.html">Migration archive ↗</a></nav></div></header>
+  <header class="masthead"><div class="wrap masthead-inner"><a href="index.html" class="logo"><span class="logo-title">Third Bedroom</span><span class="logo-subtitle">NYC Metro Home Values</span></a><nav><a href="#method">About the data</a><a href="county.html">Migration archive ↗</a></nav></div></header>
   <main>
     <section class="atlas wrap" aria-label="NYC metro home values by ZIP">
       <div class="filter-panel">
-        <div class="filter-group"><label for="bedrooms">Bedrooms</label><select id="bedrooms"><option value="all" selected>Any bedrooms</option><option value="1">1 bedroom</option><option value="2">2 bedrooms</option><option value="3">3 bedrooms</option><option value="4">4 bedrooms</option><option value="5">5+ bedrooms</option></select></div>
+        <div class="filter-group"><label for="bedrooms">Bedrooms</label><select id="bedrooms"><option value="all">Any bedrooms</option><option value="1">1 bedroom</option><option value="2">2 bedrooms</option><option value="3" selected>3 bedrooms</option><option value="4">4 bedrooms</option><option value="5">5+ bedrooms</option></select></div>
         <div class="filter-group"><label for="period">Average over</label><select id="period"><option value="1" selected>Past 12 months</option><option value="2">Past 24 months</option><option value="3">Past 36 months</option></select></div>
         <div class="filter-group price-field"><label for="min-price">Min price</label><div class="money-input"><span>$</span><input id="min-price" type="number" inputmode="numeric" min="0" step="50000" placeholder="Any"></div></div>
         <div class="filter-group price-field"><label for="max-price">Max price</label><div class="money-input"><span>$</span><input id="max-price" type="number" inputmode="numeric" min="0" step="50000" placeholder="Any"></div></div>
@@ -24,11 +24,11 @@
     </section>
     <section id="method" class="method wrap"><div class="method-copy"><p><strong>These are not recorded sale prices.</strong> Free public sale records do not consistently include bedrooms across the NYC metro. The map uses Zillow’s ZIP Home Value Index (ZHVI), an estimate of the typical value of homes, including homes that did not sell. “Any bedrooms” uses Zillow’s all-homes series, not an average of bedroom groups.</p><p>Outlines are <a href="https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html" target="_blank" rel="noopener noreferrer">2020 Census ZCTAs</a>, approximations of postal ZIPs. Source: <a href="https://www.zillow.com/research/data/" target="_blank" rel="noopener noreferrer">Zillow Research housing data</a>. Data provided by Zillow Group.</p></div></section>
   </main>
-  <footer class="wrap footer"><a href="https://unfoundedlabs.com/" target="_blank" rel="noopener noreferrer">Unfounded Labs</a><span>Data provided by Zillow Group · Geography: U.S. Census Bureau</span></footer>
+  <footer class="wrap footer"><a href="https://unfoundedlabs.com/" target="_blank" rel="noopener noreferrer">Unfounded Labs</a><span class="footer-tagline"><em>A third bedroom would be nice...</em></span><span>Data provided by Zillow Group · Geography: U.S. Census Bureau</span></footer>
   <script src="data/processed/metro_zctas.js?v=20261006-2" defer></script>
   <script src="data/processed/metro_home_values.js?v=20261006-3" defer></script>
   <script src="data/processed/metro_towns.js?v=20261006-1" defer></script>
   <script src="data/processed/metro_water.js?v=20261006-2" defer></script>
-  <script src="map.js?v=20261006-6" defer></script>
+  <script src="map.js?v=20261006-7" defer></script>
 </body>
 </html>

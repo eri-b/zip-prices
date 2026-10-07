@@ -15,3 +15,16 @@ Open http://localhost:8000, or open `index.html` directly. The checked-in extrac
 Rebuild town labels with `python3 scripts/build_metro_towns.py`.
 Rebuild water geometry with `python3 scripts/build_metro_water.py` (requires `pyshp` and `shapely`).
 Rebuild ZIP boundaries with `python3 scripts/build_metro_zctas.py` (requires `pyshp`), then rebuild the values, towns, and water layers because they use the ZIP selection and projection.
+
+## Deploy to Cloudflare Pages
+
+The site is configured as a static Cloudflare Pages project named `third-bedroom` in `wrangler.jsonc`. The build publishes only the site files and browser data to `dist/`; it leaves raw source data and build scripts out of the deployed site.
+
+Connect this repository to Cloudflare Pages with the following settings:
+
+- Production branch: `main`
+- Framework preset: None
+- Build command: `sh scripts/build_cloudflare.sh`
+- Build output directory: `dist`
+
+Run `sh scripts/build_cloudflare.sh` locally to inspect the deployment files. For a manual deployment of an existing Pages project, run `npx wrangler pages deploy dist --project-name third-bedroom` after building. If the Cloudflare project has another name, update `wrangler.jsonc` and the deploy command to match it.

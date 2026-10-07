@@ -159,9 +159,10 @@ try{
   if(towns?.format!=='metro-towns-v1')throw Error('Town label data unavailable');
   if(water?.format!=='metro-water-v1'||!water.paths?.length)throw Error('Water map data unavailable');
   app.geometry=geometry;app.data=data;app.towns=towns;app.water=water;
-  svg.setAttribute('viewBox',`0 0 ${geometry.width} ${geometry.height}`);
-  app.view={x:0,y:0,w:geometry.width,h:geometry.height};
   renderGeometry();wireEvents();
   const zip=new URLSearchParams(location.search).get('zip');if(zip)selectZip(zip);
+  const initialWidth=520;
+  const center=app.zips.get(zip)?.center ?? app.zips.get('10001')?.center ?? [geometry.width/2,geometry.height/2];
+  setView(center[0]-initialWidth/2,center[1]-initialWidth*geometry.height/geometry.width/2,initialWidth);
   renderMap();renderTownLabels();
 }catch(error){$('match-count').textContent='Data unavailable';$('map-stat').textContent=`Could not load data: ${error.message}`;detailExplainer.textContent='Check that the generated data scripts are beside the page.';}
