@@ -27,5 +27,3 @@ For a connected Git repository, set the following in the Worker's **Settings →
 - Production branch: `main`
 
 Wrangler's `build.command` also runs the site build for local `npx wrangler deploy`. Cloudflare Workers Builds does not use that setting, so its dashboard Build command is required. Run `sh scripts/build_cloudflare.sh` locally to inspect the deployment files.
-
-<!-- Temporary deployment trigger: 2026-10-07 -->
