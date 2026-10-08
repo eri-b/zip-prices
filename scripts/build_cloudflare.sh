@@ -12,5 +12,5 @@ cp data/processed/metro_zctas.js \
    data/processed/metro_home_values.js \
    data/processed/metro_towns.js \
    data/processed/metro_water.js \
-   data/processed/routes_2022_2023.json \
+   data/processed/county_routes.json \
    dist/data/processed/

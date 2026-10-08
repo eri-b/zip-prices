@@ -7,6 +7,11 @@
     {"fips": "36085", "name": "Staten Island", "county": "Richmond County"}
   ],
   "destinations": [
+    {"fips": "36061", "name": "Manhattan", "state": "NY", "region": "NYC"},
+    {"fips": "36047", "name": "Brooklyn", "state": "NY", "region": "NYC"},
+    {"fips": "36081", "name": "Queens", "state": "NY", "region": "NYC"},
+    {"fips": "36005", "name": "Bronx", "state": "NY", "region": "NYC"},
+    {"fips": "36085", "name": "Staten Island", "state": "NY", "region": "NYC"},
     {"fips": "36119", "name": "Westchester", "state": "NY", "region": "Lower Hudson Valley"},
     {"fips": "36059", "name": "Nassau", "state": "NY", "region": "Long Island"},
     {"fips": "36103", "name": "Suffolk", "state": "NY", "region": "Long Island"},
@@ -14,6 +19,7 @@
     {"fips": "36079", "name": "Putnam", "state": "NY", "region": "Lower Hudson Valley"},
     {"fips": "36027", "name": "Dutchess", "state": "NY", "region": "Hudson Valley"},
     {"fips": "36071", "name": "Orange", "state": "NY", "region": "Hudson Valley"},
+    {"fips": "36111", "name": "Ulster", "state": "NY", "region": "Hudson Valley"},
     {"fips": "34003", "name": "Bergen", "state": "NJ", "region": "North Jersey"},
     {"fips": "34017", "name": "Hudson", "state": "NJ", "region": "North Jersey"},
     {"fips": "34013", "name": "Essex", "state": "NJ", "region": "North Jersey"},

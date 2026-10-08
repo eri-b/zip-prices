@@ -4,83 +4,61 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f7f3">
-  <title>NYC Migration Explorer · IRS SOI</title>
+  <title>NYC County Migration Explorer</title>
   <link rel="stylesheet" href="county.css">
 </head>
 <body>
   <div class="topline"></div>
   <header class="site-header shell">
     <a class="brand" href="county.html">NYC<span class="brand-mark">→</span><br><span>Migration Explorer</span></a>
-    <a class="source-link" href="https://www.irs.gov/statistics/soi-tax-stats-migration-data" target="_blank" rel="noopener">Source: IRS Statistics of Income <span aria-hidden="true">↗</span></a>
+    <a class="source-link" href="https://www.irs.gov/statistics/soi-tax-stats-migration-data" target="_blank" rel="noopener">Source: IRS Statistics of Income ↗</a>
   </header>
-
   <main class="shell">
-    <section class="intro" aria-labelledby="page-title">
-      <div class="eyebrow"><span class="eyebrow-dot"></span> COUNTY-TO-COUNTY MIGRATION · 2022–2023</div>
-      <h1 id="page-title">Where are New Yorkers<br><em>moving next?</em></h1>
-      <p>Explore published IRS tax-return flows from New York City’s five boroughs to nearby suburban counties. Compare destinations, boroughs, and the people and income represented on those returns.</p>
+    <section class="intro">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> COUNTY → COUNTY MIGRATION</div>
+      <h1>See where a borough’s<br><em>tax filers moved.</em></h1>
+      <p>Choose an NYC origin, a destination county, and a year. Every number is a published IRS origin → destination flow between two filing years.</p>
     </section>
 
-    <section class="control-panel" aria-label="Explore migration flows">
-      <div class="control-heading"><span>EXPLORE THE DATA</span><span class="control-index">01 / 03</span></div>
+    <section class="control-panel" aria-label="Choose a route and year">
+      <div class="control-heading">EXPLORE A ROUTE</div>
       <div class="controls">
-        <label>Migration year
-          <select id="year" aria-label="Migration year"><option value="2022-2023">2022–2023</option></select>
-        </label>
-        <label>Origin borough
-          <select id="origin" aria-label="Origin borough"><option value="all">All NYC boroughs</option></select>
-        </label>
-        <label>Measure
-          <select id="metric" aria-label="Measure">
-            <option value="exemptions">Individuals represented</option>
-            <option value="returns">Tax returns</option>
-            <option value="agi_usd">Aggregate AGI</option>
-          </select>
-        </label>
-        <label>Destination region
-          <select id="region" aria-label="Destination region"><option value="all">All selected counties</option></select>
-        </label>
+        <label>From <select id="origin" aria-label="Origin borough"></select></label>
+        <label>To <select id="destination" aria-label="Destination county"><option value="all">All destinations</option></select></label>
+        <label>Year <select id="year" aria-label="Migration year"></select></label>
+        <label>Show <select id="metric" aria-label="Measure">
+          <option value="people">People on returns</option>
+          <option value="returns">Tax returns</option>
+          <option value="agi_usd">Aggregate income</option>
+        </select></label>
       </div>
       <p class="filter-note" id="filter-note"></p>
     </section>
 
     <section class="overview" aria-labelledby="ranking-title">
-      <div class="section-heading"><div><span class="section-kicker">01 — DESTINATIONS</span><h2 id="ranking-title">Where they moved</h2></div><span class="year-pill">2022 → 2023</span></div>
-      <div class="summary-strip">
-        <div><span class="summary-label" id="total-label">INDIVIDUALS REPRESENTED</span><strong id="total-value">—</strong></div>
-        <div><span class="summary-label">PUBLISHED ROUTES</span><strong id="route-count">—</strong></div>
-        <div><span class="summary-label">LEADING DESTINATION</span><strong id="top-county">—</strong></div>
-      </div>
-      <div class="chart-layout">
-        <div class="ranking" id="ranking" aria-label="Ranked destination counties"></div>
-        <aside class="insight" id="insight" aria-live="polite"></aside>
-      </div>
+      <div class="section-heading"><div><span class="section-kicker">DESTINATION ROUTES</span><h2 id="ranking-title">From Brooklyn</h2></div><span class="year-pill" id="year-pill"></span></div>
+      <p class="section-description">Each bar is one origin → destination route. Bars share the same scale. Select a route to see its yearly history.</p>
+      <div class="chart-key"><span id="chart-measure"></span><span id="chart-scale"></span></div>
+      <div class="ranking" id="ranking" aria-label="Ranked county-to-county routes"></div>
     </section>
 
-    <section class="table-section" aria-labelledby="table-title">
-      <div class="section-heading"><div><span class="section-kicker">02 — EXACT VALUES</span><h2 id="table-title">Destination counties</h2></div></div>
-      <p class="section-description">Click a county to see its NYC origin mix. Shares use the selected measure and only the selected destination set.</p>
-      <div class="table-scroll"><table id="destination-table"><thead><tr><th scope="col">Destination</th><th scope="col">Region</th><th scope="col" id="table-metric">Individuals</th><th scope="col">Share</th><th scope="col">Returns</th><th scope="col">AGI</th></tr></thead><tbody></tbody></table></div>
+    <section class="route-section" aria-labelledby="route-title">
+      <div class="section-heading"><div><span class="section-kicker">SELECTED ROUTE</span><h2 id="route-title">Brooklyn → Manhattan</h2></div></div>
+      <div id="route-detail"></div>
     </section>
 
-    <section class="matrix-section" aria-labelledby="matrix-title">
-      <div class="section-heading"><div><span class="section-kicker">03 — BOROUGH COMPARISON</span><h2 id="matrix-title">Origin × destination</h2></div></div>
-      <p class="section-description">Every cell is the selected measure for one borough-to-county route. Darker cells indicate larger published flows; a dash means the IRS did not publish a route.</p>
-      <div class="table-scroll"><table id="matrix"><thead></thead><tbody></tbody></table></div>
-    </section>
-
-    <section class="method" id="methodology" aria-labelledby="method-title">
+    <section class="method" aria-labelledby="method-title">
       <span class="section-kicker">ABOUT THE NUMBERS</span>
       <h2 id="method-title">How to read this data</h2>
       <div class="method-grid">
-        <div><h3>A move in IRS data</h3><p>The IRS matches taxpayer addresses across two filing years. Returns approximate households; its <em>n2</em> count represents individuals on those returns. These are tax-data measures, not a full population count.</p></div>
-        <div><h3>Adjusted gross income</h3><p>AGI is aggregate income on the destination-year returns, shown here in dollars. It is not wealth. AGI per return, where shown, is a mean rather than a median.</p></div>
-        <div><h3>Coverage</h3><p>Only the selected NY and NJ counties are included. Connecticut’s latest IRS county file uses planning regions, so Fairfield County cannot be shown exactly. Small or protected county flows may be unpublished.</p></div>
+        <div><h3>What counts as a move?</h3><p>The IRS matches addresses on returns filed in consecutive years. “People” counts individuals represented on those returns; it is not a complete population count.</p></div>
+        <div><h3>What is income?</h3><p>Aggregate adjusted gross income is the sum reported on destination-year returns. It is not wealth or a median income.</p></div>
+        <div><h3>Missing routes and year changes</h3><p>A dash means the IRS did not publish that county pair, not zero moves. The IRS changed its matching process in 2022–2023, so that year is not directly comparable with earlier years. Connecticut changed to planning regions and is excluded.</p></div>
       </div>
-      <p class="method-foot">Source: <a href="https://www.irs.gov/statistics/soi-tax-stats-migration-data-2022-2023" target="_blank" rel="noopener">IRS SOI 2022–2023 migration data ↗</a> · <a href="DATA_NOTES.md">Data notes and source-row checks</a></p>
+      <p class="method-foot">Sources: <a href="https://www.irs.gov/statistics/soi-tax-stats-migration-data" target="_blank" rel="noopener">IRS annual migration files ↗</a> · <a href="DATA_NOTES.md">Data notes</a></p>
     </section>
   </main>
-  <footer class="site-footer shell"><span>NYC Migration Explorer</span><span>Built from published IRS county-to-county outflow data.</span></footer>
+  <footer class="site-footer shell"><span>NYC Migration Explorer</span><span>Published IRS county-to-county outflow data, 2011–2023.</span></footer>
   <script src="county.js" defer></script>
 </body>
 </html>
