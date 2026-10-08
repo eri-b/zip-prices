@@ -4,13 +4,15 @@
 
 The explorer uses the [IRS SOI county-to-county outflow files](https://www.irs.gov/statistics/soi-tax-stats-migration-data) for every available CSV year from 2011–2012 through 2022–2023. `python3 scripts/build_county_routes.py` downloads each official `countyoutflowYYZZ.csv` and writes the selected rows to `data/processed/county_routes.json`. The browser reads this compact extract; rebuilding requires network access.
 
-Origins are the five NYC boroughs. Destinations are the other four boroughs, Ulster, and the selected NY and NJ counties in `data/geography.json`. Same-county rows are excluded because they do not represent a county-to-county move. This is a selected destination set, not all departures from NYC.
+Every county in `data/geography.json`'s `destinations` list is available as both an origin and a destination: the five NYC boroughs, Ulster, and selected NY and NJ counties. Same-county rows are excluded because they do not represent a county-to-county move. This is a selected area, not a nationwide migration total.
 
 ## Meaning of the values
 
 The IRS matches taxpayer addresses on returns filed in consecutive years. `n1` is the count of matched tax returns, an approximation of households. `n2` is the number of individuals represented on those returns, not a complete population count. `agi` is aggregate adjusted gross income on destination-year returns, supplied in thousands of dollars and multiplied by 1,000 in the extract. It is income, not wealth.
 
-Origin and destination FIPS are normalized to two state digits plus three county digits because the 2020–2021 and 2021–2022 CSVs omit some leading zeros. The importer keeps only real configured county pairs and skips suppressed `-1` or blank values. A route absent from the file or suppressed is displayed as `—`, never zero. Each retained origin–destination pair is checked for uniqueness within its year.
+Origin and destination FIPS are normalized to two state digits plus three county digits because the 2020–2021 and 2021–2022 CSVs omit some leading zeros. The importer keeps only real configured county pairs and skips suppressed `-1` or blank values. A route absent from the file or suppressed is displayed as `—`, never zero. Each retained origin–destination pair is checked for uniqueness within its year. The 2013–2014 source repeats five selected rows exactly; the importer keeps one copy of each and rejects conflicting duplicates.
+
+For 2022–2023, 406 of the 462 distinct-county pairs in the selected area are published. The other 56 pairs are absent from both the official county outflow and inflow CSVs; they were not dropped by the importer. The [IRS users guide](https://www.irs.gov/pub/irs-soi/2223inpublicmigdoc.pdf) says county cells need at least 20 returns to be published and may also be suppressed for confidentiality. The file does not identify a specific reason for each absent pair.
 
 ## Comparing years
 

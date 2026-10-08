@@ -4,27 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f7f3">
-  <title>NYC County Migration Explorer</title>
+  <title>NY Metro County Migration Explorer</title>
   <link rel="stylesheet" href="county.css">
 </head>
 <body>
   <div class="topline"></div>
   <header class="site-header shell">
-    <a class="brand" href="county.html">NYC<span class="brand-mark">→</span><br><span>Migration Explorer</span></a>
+    <a class="brand" href="county.html">NY Metro<span class="brand-mark">→</span><br><span>Migration Explorer</span></a>
     <a class="source-link" href="https://www.irs.gov/statistics/soi-tax-stats-migration-data" target="_blank" rel="noopener">Source: IRS Statistics of Income ↗</a>
   </header>
   <main class="shell">
-    <section class="intro">
-      <div class="eyebrow"><span class="eyebrow-dot"></span> COUNTY → COUNTY MIGRATION</div>
-      <h1>See where a borough’s<br><em>tax filers moved.</em></h1>
-      <p>Choose an NYC origin, a destination county, and a year. Every number is a published IRS origin → destination flow between two filing years.</p>
-    </section>
-
     <section class="control-panel" aria-label="Choose a route and year">
       <div class="control-heading">EXPLORE A ROUTE</div>
       <div class="controls">
-        <label>From <select id="origin" aria-label="Origin borough"></select></label>
-        <label>To <select id="destination" aria-label="Destination county"><option value="all">All destinations</option></select></label>
+        <label>From <select id="origin" aria-label="Origin county"></select></label>
+        <label>To <select id="destination" aria-label="Destination county"></select></label>
         <label>Year <select id="year" aria-label="Migration year"></select></label>
         <label>Show <select id="metric" aria-label="Measure">
           <option value="people">People on returns</option>
@@ -35,15 +29,16 @@
       <p class="filter-note" id="filter-note"></p>
     </section>
 
-    <section class="overview" aria-labelledby="ranking-title">
-      <div class="section-heading"><div><span class="section-kicker">DESTINATION ROUTES</span><h2 id="ranking-title">From Brooklyn</h2></div><span class="year-pill" id="year-pill"></span></div>
-      <p class="section-description">Each bar is one origin → destination route. Bars share the same scale. Select a route to see its yearly history.</p>
-      <div class="chart-key"><span id="chart-measure"></span><span id="chart-scale"></span></div>
-      <div class="ranking" id="ranking" aria-label="Ranked county-to-county routes"></div>
+    <section class="overview" aria-labelledby="grid-title">
+      <div class="section-heading"><div><span class="section-kicker">COUNTY FLOWS</span><h2 id="grid-title">Origin × destination</h2></div><span class="year-pill" id="year-pill"></span></div>
+      <div class="chart-key"><span id="chart-measure"></span><span id="grid-coverage"></span></div>
+      <div class="heat-legend" aria-label="Flow color scale"><span id="legend-min"></span><span class="heat-legend-ramp" aria-hidden="true"></span><span id="legend-max"></span></div>
+      <p class="grid-note">Rows are origins (where people came from); columns are destinations (where they went). Scroll sideways for more destinations. The color scale makes smaller flows easier to distinguish; exact values are in each cell. — is unpublished; n/a is the same county.</p>
+      <div class="flow-grid-scroll"><table class="flow-grid" id="flow-grid" aria-label="Origins by destination county"><thead></thead><tbody></tbody></table></div>
     </section>
 
     <section class="route-section" aria-labelledby="route-title">
-      <div class="section-heading"><div><span class="section-kicker">SELECTED ROUTE</span><h2 id="route-title">Brooklyn → Manhattan</h2></div></div>
+      <div class="section-heading"><div><span class="section-kicker">SELECTED ROUTE</span><h2 id="route-title">Westchester County, NY → Manhattan</h2></div></div>
       <div id="route-detail"></div>
     </section>
 
@@ -53,12 +48,12 @@
       <div class="method-grid">
         <div><h3>What counts as a move?</h3><p>The IRS matches addresses on returns filed in consecutive years. “People” counts individuals represented on those returns; it is not a complete population count.</p></div>
         <div><h3>What is income?</h3><p>Aggregate adjusted gross income is the sum reported on destination-year returns. It is not wealth or a median income.</p></div>
-        <div><h3>Missing routes and year changes</h3><p>A dash means the IRS did not publish that county pair, not zero moves. The IRS changed its matching process in 2022–2023, so that year is not directly comparable with earlier years. Connecticut changed to planning regions and is excluded.</p></div>
+        <div><h3>Missing routes and year changes</h3><p>The IRS does not publish county pairs with fewer than 20 returns and may suppress other cells for privacy. A dash does not mean zero moves. Its matching process changed in 2022–2023, so that year is not directly comparable with earlier years. Connecticut changed to planning regions and is excluded.</p></div>
       </div>
       <p class="method-foot">Sources: <a href="https://www.irs.gov/statistics/soi-tax-stats-migration-data" target="_blank" rel="noopener">IRS annual migration files ↗</a> · <a href="DATA_NOTES.md">Data notes</a></p>
     </section>
   </main>
-  <footer class="site-footer shell"><span>NYC Migration Explorer</span><span>Published IRS county-to-county outflow data, 2011–2023.</span></footer>
+  <footer class="site-footer shell"><span>NY Metro Migration Explorer</span><span>Published IRS county-to-county flows among selected NY and NJ counties, 2011–2023.</span></footer>
   <script src="county.js" defer></script>
 </body>
 </html>

@@ -14,7 +14,7 @@ python3 -m http.server 8000
 
 Open http://localhost:8000. The checked-in home-value extract is ready to use. Refresh it with `python3 scripts/build_home_values.py`; the build writes both JSON and a browser-loadable JavaScript copy.
 
-The [county migration explorer](county.html) shows IRS origin → destination flows from NYC boroughs to other boroughs and nearby counties for 2011–2012 through 2022–2023. Its checked-in extract is ready to use; refresh it with `python3 scripts/build_county_routes.py`. See [DATA_NOTES.md](DATA_NOTES.md) for source and comparability notes.
+The [county migration explorer](county.html) shows an origin × destination grid for the selected NYC-area counties, with every listed county available on both axes, for 2011–2012 through 2022–2023. Its checked-in extract is ready to use; refresh it with `python3 scripts/build_county_routes.py`. See [DATA_NOTES.md](DATA_NOTES.md) for source and comparability notes.
 
 Rebuild town labels with `python3 scripts/build_metro_towns.py`.
 Rebuild water geometry with `python3 scripts/build_metro_water.py` (requires `pyshp` and `shapely`).
