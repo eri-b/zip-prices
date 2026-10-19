@@ -12,7 +12,7 @@ The landing page maps typical home values across the NYC area, including Ulster 
 python3 -m http.server 8000
 ```
 
-Open http://localhost:8000, or open `index.html` directly. The checked-in extract is ready to use. Refresh it with `python3 scripts/build_home_values.py`; the build writes both JSON and a browser-loadable JavaScript copy. The prior IRS county migration explorer remains at `county.html`; its source notes are in [DATA_NOTES.md](DATA_NOTES.md).
+Open http://localhost:8000, or open `index.html` directly. The checked-in extract is ready to use. Refresh it with `python3 scripts/build_home_values.py`; the build writes both JSON and a browser-loadable JavaScript copy.
 
 Rebuild town labels with `python3 scripts/build_metro_towns.py`.
 Rebuild water geometry with `python3 scripts/build_metro_water.py` (requires `pyshp` and `shapely`).
